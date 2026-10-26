@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Piano Steps</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one-column practice desk. Now card with hands, keyboard, controls, then the score strip and tips. Note colors follow the lesson book's A-G letters. */
+:root{
+  --bg:#FFFFFF; --paper:#F3F5FA; --ink:#23263A; --muted:#5F6580; --line:#DDE1EC;
+  --spine:#EA7E1C; --spine-ink:#FFFFFF; --ok:#2B9A68; --bad:#D9485F;
+  --key-white:#FFFFFF; --key-edge:#C5CAD8; --key-black:#20222C; --hand:#E7EAF3; --hand-edge:#C3C8D8;
+  --c-A:#A98AD2; --c-B:#4EA2DA; --c-C:#E875AE; --c-D:#8BA4C8; --c-E:#82C23E; --c-F:#F3A043; --c-G:#58C1AD;
+  --display:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16182A; --paper:#1F2238; --ink:#EEF0FA; --muted:#A7ACC6; --line:#333752;
+  --spine:#F39A45; --spine-ink:#1A1206; --ok:#4CC08A; --bad:#F06A7E;
+  --key-white:#ECEDF2; --key-edge:#8E93A8; --key-black:#0C0D14; --hand:#2C3050; --hand-edge:#454A6E;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#16182A; --paper:#1F2238; --ink:#EEF0FA; --muted:#A7ACC6; --line:#333752;
+  --spine:#F39A45; --spine-ink:#1A1206; --ok:#4CC08A; --bad:#F06A7E;
+  --key-white:#ECEDF2; --key-edge:#8E93A8; --key-black:#0C0D14; --hand:#2C3050; --hand-edge:#454A6E;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--spine);outline-offset:2px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.badge{width:44px;height:44px;border-radius:50%;background:var(--spine);color:var(--spine-ink);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px;flex:none}
+.top h1{font-size:clamp(24px,5vw,32px);line-height:1.1}
+.meta{color:var(--muted);font-size:14px;display:flex;gap:10px;flex-wrap:wrap}
+.meta span+span::before{content:"·";margin-right:10px}
+.stars{margin-left:auto;font-family:var(--display);color:var(--spine);font-size:15px;white-space:nowrap}
+select{font:inherit;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+
+/* now card */
+.now{position:relative;background:var(--paper);border-radius:22px;padding:16px;display:grid;grid-template-columns:auto 1fr;gap:16px 18px;align-items:center}
+.bubble{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:56px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.12);transition:background .2s}
+.info{display:flex;flex-direction:column;gap:4px;min-width:0}
+.solfa{font-family:var(--display);font-size:22px;font-weight:600}
+.which{font-weight:800;font-size:17px}
+.sing{color:var(--muted)}
+.sing b{color:var(--ink);font-family:var(--display);font-weight:600;font-size:19px}
+.beats{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px}
+.beat-dot{width:12px;height:12px;border-radius:50%;background:var(--spine)}
+.hands{grid-column:1 / -1;display:flex;justify-content:center;gap:24px}
+.hand{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;color:var(--muted);font-weight:700;transition:opacity .2s}
+.hand svg{width:112px;height:auto}
+.hand.off{opacity:.35}
+.palm,.fing{fill:var(--hand);stroke:var(--hand-edge);stroke-width:1.5}
+.fnum{font-family:var(--display);font-weight:600;font-size:13px;fill:var(--muted);text-anchor:middle}
+.fnum.on{fill:#fff;font-size:15px}
+.where{font-size:13px;color:var(--muted);grid-column:1 / -1;text-align:center}
+.count{position:absolute;inset:0;border-radius:22px;background:var(--paper);display:grid;place-items:center;font-family:var(--display);font-size:88px;font-weight:700;color:var(--spine)}
+@media (min-width:640px){.now{grid-template-columns:auto 1fr auto}.hands{grid-column:auto}}
+
+/* keyboard */
+.kb-wrap{overflow-x:auto;padding-top:26px}
+.kb{position:relative;display:flex;height:170px;min-width:340px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.wk{flex:1;position:relative;background:var(--key-white);border:1.5px solid var(--key-edge);border-radius:0 0 10px 10px;margin-left:-1.5px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;padding:0 0 8px;transition:background .12s}
+.wk:first-child{margin-left:0}
+.bk{position:absolute;top:0;height:60%;background:var(--key-black);border-radius:0 0 7px 7px;border:none;z-index:2;padding:0}
+.lbl{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:13px;color:#fff}
+.lbl.so{width:auto;min-width:24px;padding:0 4px;border-radius:12px;font-size:11px}
+.gf{font-family:var(--display);font-size:12px;font-weight:600;color:#6C7290;line-height:1}
+.mc{position:absolute;bottom:-20px;font-size:11px;color:var(--muted);white-space:nowrap;font-weight:700}
+.wk.target{border-width:2.5px;box-shadow:inset 0 -60px 40px -30px var(--tc)}
+.wk.target .gf{font-size:22px;color:#fff;background:var(--tc);border-radius:50%;width:34px;height:34px;display:grid;place-items:center}
+.wk.target::before{content:"";position:absolute;top:-24px;left:50%;width:0;height:0;border:10px solid transparent;border-top:14px solid var(--tc);transform:translateX(-50%);animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translate(-50%,5px)}}
+.wk.down{background:var(--paper)}
+.wk.wrong{animation:shake .3s;background:color-mix(in srgb,var(--bad) 22%,var(--key-white))}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.kb-gap{height:14px}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{border:1.5px solid var(--line);background:var(--bg);border-radius:14px;padding:10px 16px;font-weight:800;display:inline-flex;align-items:center;gap:8px}
+.btn.big{font-size:18px;padding:12px 22px}
+.btn.main{background:var(--spine);border-color:var(--spine);color:var(--spine-ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.tempo{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);font-weight:700}
+.tempo input{width:120px;accent-color:var(--spine)}
+.tempo output{font-variant-numeric:tabular-nums;min-width:58px;color:var(--ink)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:8px 12px;font-weight:800;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.spacer{flex:1}
+.library h2{font-size:16px;color:var(--muted);margin-bottom:8px}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.song{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:16px;padding:10px 12px;background:var(--bg);text-align:left;min-width:0}
+.song[aria-current="true"]{border-color:var(--spine);background:var(--paper)}
+.song .sn{width:36px;height:36px;border-radius:50%;background:var(--line);color:var(--ink);display:grid;place-items:center;font-family:var(--display);font-weight:700;flex:none}
+.song[aria-current="true"] .sn{background:var(--spine);color:var(--spine-ink)}
+.song .sx{min-width:0;display:flex;flex-direction:column}
+.song .st{font-weight:800;line-height:1.2}
+.song .ss{font-size:12px;color:var(--muted)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.speed{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.speed-lbl{font-weight:800;color:var(--muted);font-size:14px}
+.sbtn{width:52px;height:52px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper);font-size:28px;font-weight:700;line-height:1;display:grid;place-items:center;touch-action:manipulation}
+.speed-val{display:flex;align-items:baseline;gap:3px;min-width:76px;justify-content:center}
+.speed-val output{font-family:var(--display);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums}
+.speed-val small{color:var(--muted);font-weight:700}
+.presets{display:flex;gap:6px}
+.pre{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:8px 14px;font-weight:800;font-size:14px}
+.pre[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+body.step #next{flex:1 1 200px;justify-content:center;font-size:24px;padding:18px;background:var(--spine);border-color:var(--spine);color:var(--spine-ink)}
+.playbar{margin-bottom:-8px}
+.playbar .btn{flex:1;justify-content:center;max-width:240px}
+
+/* score strip */
+.score h2,.tips h2{font-size:20px;margin-bottom:8px}
+.line-lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:10px 0 6px}
+.bars{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);gap:8px}
+.chip.rest .cn{background:var(--line);color:var(--muted);font-size:13px;opacity:1}
+@media (max-width:640px){.bars{grid-template-columns:repeat(2,1fr)}}
+.bar{border:1.5px solid var(--line);border-radius:14px;padding:8px 6px 6px;min-width:0}
+.bar.cur{border-color:var(--spine)}
+.barno{font-size:11px;color:var(--muted);font-weight:800;margin:0 0 4px 2px}
+.beatsrow{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.chip{border:0;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.cn{width:100%;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:3px;color:#fff;font-family:var(--display);font-weight:600;font-size:16px;opacity:.85}
+.cn small{font-size:10px;opacity:.95}
+.chip.half .cn{border-radius:17px}
+.chip.cur .cn{opacity:1;outline:3px solid var(--ink);outline-offset:1px}
+.chip.done .cn{opacity:.4}
+.cw{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* tips */
+.tips ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;max-width:68ch}
+.tips li::marker{font-family:var(--display);color:var(--spine);font-weight:700}
+.howto{font-size:14px;color:var(--muted);max-width:68ch}
+
+/* celebration */
+.party{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 82%,transparent);display:grid;place-items:center;z-index:20;padding:16px}
+.party-card{background:var(--paper);border-radius:26px;padding:28px 24px;text-align:center;max-width:340px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.party-card .bigstar{font-size:72px;color:var(--spine);line-height:1;animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.2) rotate(-40deg)}80%{transform:scale(1.15)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="badge" id="pNum">54</div>
+    <div>
+      <h1 id="pTitle">Letters and Solfa</h1>
+      <div class="meta" id="pMeta"></div>
+    </div>
+    <div class="stars" id="stars"></div>
+  </header>
+
+  <section class="library" aria-labelledby="libTitle">
+    <h2 id="libTitle">My songs</h2>
+    <nav class="shelf" id="shelf"></nav>
+  </section>
+
+  <section class="now" aria-live="polite">
+    <div class="bubble" id="bubble">A</div>
+    <div class="info">
+      <div class="solfa" id="nSolfa">la</div>
+      <div class="which" id="nWhich">Left hand, finger 3</div>
+      <div class="sing" id="nSing"></div>
+      <div class="beats" id="nBeats"></div>
+    </div>
+    <div class="hands" id="hands"></div>
+    <div class="count" id="count" hidden>4</div>
+  </section>
+
+  <div class="controls playbar">
+    <button class="btn big main" id="along">Play along</button>
+    <button class="btn big" id="listen">♪ Listen</button>
+    <button class="btn big" id="stepMode" aria-pressed="false">Step by step</button>
+  </div>
+  <div class="speed" role="group" aria-label="Speed">
+    <span class="speed-lbl">Speed</span>
+    <button class="sbtn" id="slower" aria-label="Slower">−</button>
+    <span class="speed-val"><output id="tempoOut">66</output><small>bpm</small></span>
+    <button class="sbtn" id="faster" aria-label="Faster">+</button>
+    <div class="presets">
+      <button class="pre" data-bpm="40">Slow</button>
+      <button class="pre" data-bpm="60">Medium</button>
+      <button class="pre" data-bpm="book" id="preBook">Book</button>
+    </div>
+  </div>
+
+  <div class="kb-wrap"><div class="kb" id="kb"></div><div class="kb-gap"></div></div>
+
+  <div class="controls">
+    <button class="btn big" id="back" aria-label="Previous note">◀</button>
+    <button class="btn big" id="next">Next ▶</button>
+    <button class="btn big" id="hear" aria-label="Hear this key again">🔊</button>
+    <button class="btn" id="restart">Start over</button>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Note names">
+      <button id="modeLetter" aria-pressed="true">A B C</button>
+      <button id="modeSolfa" aria-pressed="false">do re mi</button>
+    </div>
+  </div>
+  <p class="howto"><b>Step by step</b> shows and plays one key at a time. Play it on your piano, then tap the big <b>Next key</b> button. 🔊 plays the key again.</p>
+  <p class="howto">Press the key with the arrow on your piano, then tap it here (or tap Next). <b>Listen</b> plays the tune for you. <b>Play along</b> counts down 3, 2, 1, then the arrow moves in time so you can play with it. No sound? Turn the volume up, and on iPhone check the silent switch on the side.</p>
+
+  <section class="score">
+    <h2>The whole piece</h2>
+    <div id="score"></div>
+  </section>
+
+  <section class="tips">
+    <h2>Tips</h2>
+    <ol id="tips"></ol>
+  </section>
+</div>
+
+<div class="party" id="party" hidden>
+  <div class="party-card">
+    <div class="bigstar">★</div>
+    <h2>Bravo!</h2>
+    <p id="partyMsg" style="margin:0">You played the whole piece.</p>
+    <button class="btn main big" id="again">Play again</button>
+  </div>
+</div>
+
+<script>
+const N=(n,b,h,f,w,bar)=>({n,b,h,f,w,bar});
+const R=(b,bar)=>({n:null,b,w:'',bar});
+const PIECES=[
+ {id:'sailor-went-to-sea',number:53,title:'A Sailor Went to Sea',mark:'Quite fast',time:'4/4',position:'Middle C position',bpm:80,
+  lines:[{label:'Line 1',bars:[1,2,3,4,5]},{label:'Line 2',bars:[6,7,8,9]}],
+  notes:[
+   R(2,1),N('C4',2,'L',1,'A',1),
+   N('F3',1,'L',5,'sail-',2),N('F3',1,'L',5,'or',2),N('A3',1,'L',3,'went',2),N('A3',1,'L',3,'to',2),
+   N('C4',2,'L',1,'sea',3),N('C4',2,'R',1,'To',3),
+   N('F4',1,'R',4,'see',4),N('F4',1,'R',4,'what',4),N('D4',1,'R',2,'he',4),N('D4',1,'R',2,'could',4),
+   N('C4',2,'R',1,'see,',5),N('C4',2,'L',1,'But',5),
+   N('F3',1,'L',5,'all',6),N('F3',1,'L',5,'that',6),N('A3',1,'L',3,'he',6),N('A3',1,'L',3,'could',6),
+   N('C4',2,'L',1,'see',7),N('C4',1,'R',1,'was',7),N('C4',1,'R',1,'the',7),
+   N('D4',1,'R',2,'bot-',8),N('D4',1,'R',2,'tom',8),N('E4',1,'R',3,'of',8),N('E4',1,'R',3,'the',8),
+   N('F4',2,'R',4,'sea!',9),R(2,9)
+  ],
+  tips:[
+   '<b>Same Middle C position as before.</b> Left hand fingers 5 4 3 2 1 on F G A B C, right hand fingers 1 2 3 4 5 on C D E F G. Your hands never move.',
+   '<b>Wait before you start.</b> Bar 1 begins with 2 beats of silence. Count "1, 2" quietly, then play "A" on beat 3.',
+   '<b>Only one hand plays at a time.</b> The hands take turns, like two sailors passing a rope.',
+   '<b>Both thumbs share Middle C.</b> In bar 3, the left thumb plays "sea", then the right thumb plays "To" on the same key. Lift the left thumb as the right one comes down. Same in bars 5 and 7.',
+   '<b>The left hand pattern comes twice:</b> C, then F F A A (fingers 1, 5 5 3 3). Learn it once, use it twice.',
+   '<b>The right hand jumps over a key:</b> F F D D (fingers 4 4 2 2). Skip E on the way down.',
+   '<b>The ending climbs like a wave:</b> C C D D E E F (fingers 1 1 2 2 3 3 4). Hold the last F for 2 beats.',
+   '<b>"Quite fast" comes last.</b> Learn it slowly first, then move the speed up a little each day.'
+  ]},
+ {id:'letters-and-solfa',number:54,title:'Letters and Solfa',mark:'Smoothly',time:'4/4',position:'Middle C position',bpm:66,
+  lines:[{label:'Line 1 · letters',bars:[1,2,3,4]},{label:'Line 2 · solfa',bars:[5,6,7,8]}],
+  notes:[
+   N('A3',1,'L',3,'A',1),N('B3',1,'L',2,'B',1),N('C4',1,'R',1,'C',1),N('D4',1,'R',2,'D',1),
+   N('E4',1,'R',3,'E',2),N('F4',1,'R',4,'F',2),N('G4',2,'R',5,'G',2),
+   N('F4',1,'R',4,'Mu',3),N('E4',1,'R',3,'sic',3),N('D4',1,'R',2,'al',3),N('C4',1,'R',1,'pha',3),
+   N('B3',1,'L',2,'bet,',4),N('A3',1,'L',3,'you',4),N('G3',2,'L',4,'see!',4),
+   N('G4',1,'R',5,'So',5),N('F4',1,'R',4,'fa',5),N('E4',1,'R',3,'mi',5),N('D4',1,'R',2,'re',5),
+   N('C4',1,'L',1,'do',6),N('B3',1,'L',2,'ti',6),N('A3',1,'L',3,'la,',6),N('G3',1,'L',4,'and',6),
+   N('F3',1,'L',5,'now',7),N('G3',1,'L',4,'we',7),N('A3',1,'L',3,'sing',7),N('B3',1,'L',2,'our',7),
+   N('C4',1,'R',1,'sol',8),N('D4',1,'R',2,'fa',8),N('C4',2,'R',1,'song.',8)
+  ],
+  tips:[
+   '<b>Middle C position.</b> Both thumbs share Middle C. Left hand fingers 5 4 3 2 1 sit on F G A B C. Right hand fingers 1 2 3 4 5 sit on C D E F G. Every note of this piece is under a finger, so your hands never move.',
+   '<b>Line 1 is the musical alphabet.</b> It walks up A B C D E F G, then walks back down. There are only 7 letters: after G, the alphabet starts again at A.',
+   '<b>Pass the tune between hands.</b> Left hand plays A and B, then the right thumb takes over on C. Make the handover so smooth it sounds like one hand.',
+   '<b>White notes with a stem last 2 beats.</b> Hold G at the end of bars 2 and 4, and the last C. Count "1 2 3 4" in every bar.',
+   '<b>Line 2 is the same idea in solfa.</b> So fa mi re do ti la so. On this page, do is always C.',
+   '<b>In bar 6 the left thumb plays do (C).</b> The right hand has just finished on D, so let the left hand catch the tune.',
+   '<b>Bar 7 starts low, on F.</b> That is left-hand finger 5 (the F your teacher wrote). Climb F G A B, then the right thumb finishes on C.',
+   '<b>"Smoothly" means legato.</b> Let each key come up just as the next one goes down. No gaps, no bumps.'
+  ]}
+];
+
+const LETTERS=['C','D','E','F','G','A','B'];
+const SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const SOLFA={C:'do',D:'re',E:'mi',F:'fa',G:'so',A:'la',B:'ti'};
+const parse=n=>{const m=n.match(/^([A-G])(#?)(\d)$/);return{l:m[1],s:!!m[2],o:+m[3]}};
+const midi=n=>{const p=parse(n);return 12*(p.o+1)+SEMI[p.l]+(p.s?1:0)};
+const freq=n=>440*Math.pow(2,(midi(n)-69)/12);
+const wIdx=n=>{const p=parse(n);return p.o*7+LETTERS.indexOf(p.l)};
+const wName=i=>LETTERS[i%7]+Math.floor(i/7);
+const col=l=>`var(--c-${l})`;
+const $=id=>document.getElementById(id);
+
+let stepMode=false,piece=PIECES[0],idx=0,mode='letter',bpm=66,timers=[],running=null,audio;
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* sound */
+function ac(){if(!audio){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;audio=new C()}if(audio.state!=='running')audio.resume().catch(()=>{});return audio}
+/* Unlock sound on the first tap. On iPhone, a looping silent <audio> element switches the page to "media playback",
+   so Web Audio is heard even when the silent switch is on. */
+function silentWav(){const n=4000,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+ w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+ v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+ let s='';new Uint8Array(b).forEach(x=>s+=String.fromCharCode(x));return 'data:audio/wav;base64,'+btoa(s)}
+let unlocked=false,keepAlive;
+function unlock(){if(unlocked&&audio&&audio.state==='running')return;
+ try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+ try{if(!keepAlive){keepAlive=new Audio(silentWav());keepAlive.loop=true;keepAlive.setAttribute('playsinline','')}keepAlive.play().catch(()=>{})}catch(e){}
+ const c=ac();if(!c)return;
+ try{const src=c.createBufferSource();src.buffer=c.createBuffer(1,1,22050);src.connect(c.destination);src.start(0)}catch(e){}
+ unlocked=true}
+['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,unlock,{capture:true,passive:true}));
+function tone(f,dur=1.2,vol=.32){const c=ac();if(!c)return;const t=c.currentTime,g=c.createGain();
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+ const o1=c.createOscillator();o1.type='triangle';o1.frequency.value=f;
+ const o2=c.createOscillator();o2.type='sine';o2.frequency.value=f*2;const g2=c.createGain();g2.gain.value=.22;
+ o1.connect(g);o2.connect(g2);g2.connect(g);g.connect(c.destination);o1.start(t);o2.start(t);o1.stop(t+dur);o2.stop(t+dur)}
+function click(accent){const c=ac();if(!c)return;const t=c.currentTime,o=c.createOscillator(),g=c.createGain();
+ o.frequency.value=accent?1500:1000;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+.06);
+ o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.07)}
+
+/* hands */
+const FING={1:{x:4,y:50,w:20,h:36,r:-28},2:{x:30,y:14,w:19,h:52,r:0},3:{x:52,y:6,w:19,h:58,r:0},4:{x:74,y:14,w:19,h:52,r:0},5:{x:95,y:30,w:17,h:42,r:0}};
+function handSVG(side,active,color){
+ let s=`<svg viewBox="0 0 120 108" aria-hidden="true"><rect class="palm" x="${side==='R'?28:6}" y="50" width="86" height="54" rx="20"/>`;
+ for(const k of [1,2,3,4,5]){const f=FING[k];const x=side==='R'?f.x:120-f.x-f.w;const r=side==='R'?f.r:-f.r;
+  const cx=x+f.w/2,cy=f.y+f.h/2,on=+k===active;
+  s+=`<g transform="rotate(${r} ${cx} ${cy})"><rect class="fing" x="${x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="${f.w/2}" ${on?`style="fill:${color};stroke:${color}"`:''}/>`+
+     `<text class="fnum${on?' on':''}" x="${cx}" y="${f.y+16}">${k}</text></g>`}
+ return s+'</svg>'}
+
+/* keyboard */
+let fingerMap={};
+function buildKeyboard(){
+ const ws=piece.notes.filter(n=>n.n).map(n=>wIdx(n.n));let lo=Math.min(...ws)-2,hi=Math.max(...ws)+2;
+ while(hi-lo+1<12){lo--;if(hi-lo+1<12)hi++}
+ fingerMap={};piece.notes.forEach(n=>{if(n.n&&!fingerMap[n.n])fingerMap[n.n]=n.h+n.f});
+ const kb=$('kb');kb.innerHTML='';const count=hi-lo+1;
+ for(let i=lo;i<=hi;i++){const name=wName(i),l=name[0];
+  const b=document.createElement('button');b.className='wk';b.dataset.note=name;b.style.setProperty('--tc',col(l));
+  b.setAttribute('aria-label',name);
+  const fm=fingerMap[name];
+  b.innerHTML=`${fm?`<span class="gf">${fm[1]}</span>`:''}<span class="lbl" style="background:${col(l)}" data-l="${l}">${l}</span>${name==='C4'?'<span class="mc">Middle C</span>':''}`;
+  kb.appendChild(b)}
+ for(let i=lo;i<hi;i++){const l=LETTERS[i%7];if('CDFGA'.includes(l)){const name=l+'#'+Math.floor(i/7);
+  const b=document.createElement('button');b.className='bk';b.dataset.note=name;b.setAttribute('aria-label',name);
+  const w=100/count*.6;b.style.width=w+'%';b.style.left=`calc(${(i-lo+1)/count*100}% - ${w/2}%)`;kb.appendChild(b)}}
+ kb.querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();pressKey(b)}));
+ applyLabels()}
+function applyLabels(){document.querySelectorAll('.lbl').forEach(s=>{const l=s.dataset.l;s.textContent=mode==='solfa'?SOLFA[l]:l;s.classList.toggle('so',mode==='solfa')})}
+
+function pressKey(b){const name=b.dataset.note;tone(freq(name));b.classList.add('down');setTimeout(()=>b.classList.remove('down'),180);
+ if(running)return;const cur=piece.notes[idx];
+ if(name===cur.n){advance()}else if(b.classList.contains('wk')){b.classList.remove('wrong');void b.offsetWidth;b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400)}}
+
+/* score */
+function buildScore(){const el=$('score');el.innerHTML='';
+ piece.lines.forEach(line=>{const lab=document.createElement('div');lab.className='line-lbl';lab.textContent=line.label;el.appendChild(lab);
+  const bars=document.createElement('div');bars.className='bars';bars.style.setProperty('--cols',line.bars.length);
+  line.bars.forEach(bn=>{const bar=document.createElement('div');bar.className='bar';bar.dataset.bar=bn;
+   let h=`<div class="barno">Bar ${bn}</div><div class="beatsrow">`;
+   piece.notes.forEach((n,i)=>{if(n.bar!==bn)return;
+    if(!n.n){h+=`<div class="chip rest" style="grid-column:span ${n.b}" aria-label="rest, ${n.b} beats"><span class="cn">rest</span><span class="cw">&nbsp;</span></div>`;return}
+    const l=n.n[0];
+    h+=`<button class="chip${n.b>1?' half':''}" data-i="${i}" style="grid-column:span ${n.b}" aria-label="${n.n}, ${n.h==='L'?'left':'right'} hand finger ${n.f}"><span class="cn" style="background:${col(l)}"><span class="cl" data-l="${l}">${l}</span><small>${n.h}${n.f}</small></span><span class="cw">${n.w}</span></button>`});
+   bar.innerHTML=h+'</div>';bars.appendChild(bar)});
+  el.appendChild(bars)});
+ el.querySelectorAll('.chip[data-i]').forEach(c=>c.addEventListener('click',()=>{if(running)stop();idx=+c.dataset.i;update();tone(freq(piece.notes[idx].n))}));
+ applyChipLabels()}
+function applyChipLabels(){document.querySelectorAll('.cl').forEach(s=>s.textContent=mode==='solfa'?SOLFA[s.dataset.l]:s.dataset.l)}
+
+/* update view */
+function update(){const n=piece.notes[idx],l=n.n[0];
+ $('bubble').textContent=l;$('bubble').style.background=col(l);
+ $('nSolfa').textContent=SOLFA[l];
+ $('nWhich').textContent=`${n.h==='L'?'Left':'Right'} hand, finger ${n.f}`;
+ $('nSing').innerHTML=`Sing: <b>${n.w}</b>`;
+ $('nBeats').innerHTML=Array.from({length:n.b},()=>'<span class="beat-dot"></span>').join('')+(n.b>1?` Hold for ${n.b} beats`:' 1 beat');
+ $('hands').innerHTML=['L','R'].map(s=>`<div class="hand${n.h===s?'':' off'}">${handSVG(s,n.h===s?n.f:0,col(l))}${s==='L'?'Left':'Right'}</div>`).join('');
+ document.querySelectorAll('.wk').forEach(k=>k.classList.toggle('target',k.dataset.note===n.n));
+ const tk=document.querySelector('.wk.target');
+ document.querySelectorAll('.chip').forEach(c=>{const i=+c.dataset.i;c.classList.toggle('cur',i===idx);c.classList.toggle('done',i<idx)});
+ document.querySelectorAll('.bar').forEach(b=>b.classList.toggle('cur',+b.dataset.bar===n.bar));
+ $('back').disabled=prevPlay(idx)<0;
+ $('next').textContent=nextPlay(idx)<0?'Finish ★':(stepMode?'Next key ▶':'Next ▶')}
+const nextPlay=i=>{for(let j=i+1;j<piece.notes.length;j++)if(piece.notes[j].n)return j;return -1};
+const prevPlay=i=>{for(let j=i-1;j>=0;j--)if(piece.notes[j].n)return j;return -1};
+const firstPlay=()=>nextPlay(-1);
+
+function advance(){const j=nextPlay(idx);if(j>=0){idx=j;update()}else celebrate()}
+function celebrate(){const k='pianoSteps.stars.'+piece.id;const s=store.get(k,0)+1;store.set(k,s);showStars();
+ $('partyMsg').textContent=`You played "${piece.title}" all the way through. That makes ${s} star${s>1?'s':''}!`;$('party').hidden=false}
+function showStars(){const s=store.get('pianoSteps.stars.'+piece.id,0);$('stars').textContent=s?`★ ${s}`:'';buildShelf()}
+
+/* playback */
+function stop(){timers.forEach(clearTimeout);timers=[];running=null;$('count').hidden=true;
+ $('listen').textContent='♪ Listen';$('along').textContent='Play along'}
+async function run(kind){if(running){const was=running;stop();if(was===kind)return}
+ unlock();const c=ac();running=kind;
+ if(c&&c.state!=='running'){try{await Promise.race([c.resume(),new Promise(r=>setTimeout(r,800))])}catch(e){}}
+ if(running!==kind)return;
+ idx=firstPlay();update();const spb=60000/bpm;let t=0;
+ (kind==='listen'?$('listen'):$('along')).textContent='■ Stop';
+ if(kind==='along'){for(let i=0;i<3;i++){timers.push(setTimeout(()=>{click(i===2);$('count').hidden=false;$('count').textContent=3-i},t));t+=1000}
+  timers.push(setTimeout(()=>{$('count').hidden=true},t))}
+ let beat=0;piece.notes.forEach((n,i)=>{if(n.n)timers.push(setTimeout(()=>{idx=i;update();if(kind==='listen')tone(freq(n.n),n.b*spb/1000+.35)},t+beat*spb));beat+=n.b});
+ if(kind==='along'){for(let b=0;b<beat;b++)timers.push(setTimeout(()=>click(b%4===0),t+b*spb))}
+ timers.push(setTimeout(()=>{stop();idx=firstPlay();update()},t+beat*spb+400))}
+
+/* wiring */
+function sayCur(){const n=piece.notes[idx];if(n&&n.n)tone(freq(n.n),Math.min(1.8,n.b*.7+.5))}
+$('next').onclick=()=>{if(running)stop();if(stepMode){const last=nextPlay(idx)<0;advance();if(!last)sayCur()}else{sayCur();advance()}};
+$('back').onclick=()=>{if(running)stop();const j=prevPlay(idx);if(j>=0){idx=j;update();if(stepMode)sayCur()}};
+$('hear').onclick=()=>{if(running)stop();sayCur()};
+function setStep(on,announce){stepMode=on;document.body.classList.toggle('step',on);$('stepMode').setAttribute('aria-pressed',on);
+ $('next').textContent=on?(nextPlay(idx)<0?'Finish ★':'Next key ▶'):'Next ▶';store.set('pianoSteps.step',on);
+ if(on&&announce){if(running)stop();idx=firstPlay();update();sayCur();$('next').scrollIntoView({block:'nearest',behavior:'smooth'})}}
+$('stepMode').onclick=()=>setStep(!stepMode,true);
+function setBpm(v,save=true){bpm=Math.max(20,Math.min(120,Math.round(v)));$('tempoOut').textContent=bpm;if(save)store.set('pianoSteps.bpm.'+piece.id,bpm);
+ document.querySelectorAll('.pre').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.bpm==='book'?piece.bpm:+b.dataset.bpm)===bpm))}
+$('slower').onclick=()=>setBpm(bpm-5);$('faster').onclick=()=>setBpm(bpm+5);
+document.querySelectorAll('.pre').forEach(b=>b.onclick=()=>setBpm(b.dataset.bpm==='book'?piece.bpm:+b.dataset.bpm));
+$('restart').onclick=()=>{stop();idx=firstPlay();update()};
+$('listen').onclick=()=>run('listen');
+$('along').onclick=()=>run('along');
+$('again').onclick=()=>{$('party').hidden=true;idx=firstPlay();update()};
+
+function setMode(m){mode=m;$('modeLetter').setAttribute('aria-pressed',m==='letter');$('modeSolfa').setAttribute('aria-pressed',m==='solfa');applyLabels();applyChipLabels();store.set('pianoSteps.mode',m)}
+$('modeLetter').onclick=()=>setMode('letter');$('modeSolfa').onclick=()=>setMode('solfa');
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){e.preventDefault();$('next').click()}if(e.key==='ArrowLeft'){e.preventDefault();$('back').click()}});
+
+function loadPiece(p){stop();piece=p;idx=firstPlay();store.set('pianoSteps.piece',p.id);
+ $('pNum').textContent=p.number;$('pTitle').textContent=p.title;
+ $('pMeta').innerHTML=`<span>${p.mark}</span><span>${p.time} time</span><span>${p.position}</span>`;
+ $('preBook').textContent='Book '+p.bpm;setBpm(store.get('pianoSteps.bpm.'+p.id,p.bpm),false);
+ $('tips').innerHTML=p.tips.map(t=>`<li>${t}</li>`).join('');
+ buildKeyboard();buildScore();showStars();update()}
+
+PIECES.sort((a,b)=>a.number-b.number);
+function buildShelf(){const el=$('shelf');
+ el.innerHTML=PIECES.map((p,i)=>{const s=store.get('pianoSteps.stars.'+p.id,0);
+  return `<button class="song" data-i="${i}" aria-current="${p===piece}"><span class="sn">${p.number}</span><span class="sx"><span class="st">${p.title}</span><span class="ss">${s?'★ '+s+' · ':''}${p.notes.filter(n=>n.n).length} notes</span></span></button>`}).join('');
+ el.querySelectorAll('.song').forEach(b=>b.onclick=()=>{const p=PIECES[+b.dataset.i];if(p!==piece){loadPiece(p);if(stepMode)setStep(true,true)}})}
+mode=store.get('pianoSteps.mode','letter');
+const lastId=store.get('pianoSteps.piece',PIECES[0].id);const startI=Math.max(0,PIECES.findIndex(p=>p.id===lastId));
+loadPiece(PIECES[startI]);setMode(mode);setStep(store.get('pianoSteps.step',false),false);
+</script>
+
+</body>
+</html>
